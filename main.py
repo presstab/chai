@@ -53,6 +53,7 @@ def main():
                 conversation_id = f"{user_id}_conversation{len(existing_conversations) + 1}"
     else:
         conversation_id = f"{user_id}_conversation1"
+        print(f"Using conversation ID: {conversation_id}")
         run_chat(db_manager, conversation_id)
     
 
@@ -120,8 +121,6 @@ def run_chat(db_manager: FlatFileManager, conversation_id: str) -> None:
         end_time = time.perf_counter()
         duration = end_time - start_time
         # ---------------------------------------------------
-
-        print(f"AI: {ai_response}")
         print(f"(Operation took {duration:.4f} seconds)")
 
 
