@@ -13,7 +13,20 @@ def main():
     # Update this connection string for your MongoDB setup
     # For local: "mongodb://localhost:27017/"
     # For Atlas: "mongodb+srv://username:password@cluster.mongodb.net/"
-    connection_string = None  # fixme!
+
+    # example for Mongo Atlas
+    # **IMPORTANT** You must set the environment variable MONGO_KEY from your terminal if you are using Atlas
+    # This is something that does not persist from one terminal session to another, so remember to do it!
+    # For Windows Command Prompt: set MONGO_KEY=password_here
+    # For Windows PowerShell: $env:MONGO_KEY = "password_here"
+    # For Mac/Linux: export MONGO_KEY="password_here"
+    #user = "tom" # replace with your username in Atlas
+    #password = os.getenv("MONGO_KEY")
+    #Edit the url to use the url it gives you - remember to enter username and password as is done below
+    #connection_string = f"mongodb+srv://{user}:{password}@cluster0.3walskx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+    # example for Local mongodb
+    # connection_string = "mongodb://localhost:27017/"
 
     db_manager = MongoDBManager(connection_string=connection_string, database_name="chai_db")
 
@@ -22,18 +35,40 @@ def main():
     # --- TODO 2: List existing threads and let user choose ---
     # Steps:
     # 1. Get list of existing threads for this user using list_user_threads()
-    # 2. If threads exist:
+    # 2. If threads exist (Step 2 already done for you, understand the flow, then skip to 3):
     #    - Print them out with numbers (e.g., "1. work_project")
     #    - Print an option to create a new thread (e.g., "N. Create new thread")
     #    - Get user's choice
     # 3. If no threads exist or user chooses new:
-    #    - Prompt for a new thread name
-    # 4. Store the selected/new thread_name
+    #    - Prompt for a new thread name (already done for you, skip to next)
+    #    - Store the new thread_name
 
     threads = None  # fixme!
-    thread_name = None  # fixme!
 
-    # Your code here...
+    for i, thread_name in enumerate(threads):
+        print(f"{i}. {thread_name}")
+    print(f"{len(threads)}. Create new thread")
+    user_selection = input("Enter a thread number:")
+
+    if not user_selection.isdigit():
+        print("Not a number, exiting")
+        return
+
+    choice = int(user_selection)
+
+    if choice > len(threads):
+        print("Selection is too large of a number")
+        return
+
+    thread_name = ""
+    if not threads or choice == len(threads):
+        # prompt for thread name
+        thread_name = input("Enter thread name:")
+        # Store new thread name
+        # fixme!
+        # db_manager.save_conversation
+    else:
+        thread_name = threads[choice]
 
     run_chat(db_manager, user_id, thread_name)
 
@@ -49,8 +84,8 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
     # Time how long it takes to load the conversation
     start_time = time.perf_counter()
     messages = None  # fixme! Use get_conversation
-    end_time = time.perf_counter()
-    duration = end_time - start_time
+    end_time = None # fixme!
+    duration = None # fixme!
 
     if messages:
         print(f"\n--- Conversation History ({len(messages)} messages) ---")
@@ -83,11 +118,13 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
         # Append user message
         user_message = {"role": "user", "content": user_input}
         # fixme! Use append_message
+        # db_manager.
 
         # Create and append AI response
         ai_response = "This is a mock response from the AI."
         ai_message = {"role": "assistant", "content": ai_response}
         # fixme! Use append_message
+        #db_manager.
 
         end_time = None  # fixme!
         duration = None  # fixme!

@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Dict, Optional
 from pymongo import MongoClient
 from pymongo.collection import Collection
@@ -24,11 +24,11 @@ class MongoDBManager:
         # 2. Get the database using database_name
         # 3. Get the 'conversations' collection from the database
         # Store these as instance variables: self.client, self.db, self.conversations
-        # Hint: client[database_name] gets a database
-        # Hint: db[collection_name] gets a collection
-        self.client = None  # fixme!
-        self.db = None  # fixme!
-        self.conversations = None  # fixme!
+        # Hint: self.client[database_name] gets a database
+        # Hint: db[collection_name] gets a collection - use "conversations" as the collection_name
+        self.client = MongoClient(connection_string)
+        self.db = None #fixme!
+        self.conversations = None #fixme!
 
         self._ensure_indexes()
 
@@ -61,7 +61,10 @@ class MongoDBManager:
 
         Hint: find_one({"user_id": user_id, "thread_name": thread_name})
         """
-        pass  # fixme!
+        # document = self.conversations. fixme!
+        if not document or "messages" not in document:
+            return []
+        return document["messages"]
 
     def save_conversation(self, user_id: str, thread_name: str, messages: List[Dict]) -> None:
         """
@@ -80,16 +83,20 @@ class MongoDBManager:
            - user_id: user_id
            - thread_name: thread_name
            - messages: messages
-           - created_at: current timestamp (use datetime.utcnow().isoformat())
+           - created_at: current timestamp (use datetime.now(UTC).isoformat())
            - updated_at: current timestamp
         3. Use update_one() with upsert=True to insert or replace the document
            - Filter: {"_id": conversation_id}
            - Update: {"$set": document}
            - upsert=True creates the document if it doesn't exist
 
-        Hint: collection.update_one(filter, {"$set": doc}, upsert=True)
+        Hint: self.conversations.update_one({filter goes here}, {update goes here}, upsert=True)
         """
-        pass  # fixme!
+        conversation_id = f"{}_{}" # fixme!
+        # fixme! add fields to document
+        document = {
+        }
+        # fixme! self.conversations.
 
     def append_message(self, user_id: str, thread_name: str, message: Dict) -> None:
         """
@@ -113,7 +120,20 @@ class MongoDBManager:
         Hint: $push adds to an array, $setOnInsert sets values only on insert
         Hint: update_one(filter, {"$push": {...}, "$set": {...}, "$setOnInsert": {...}}, upsert=True)
         """
-        pass  # fixme!
+        conversation_id = "" #fixme!
+        # fixme! fill out update
+        update = {
+            "$push": {},
+            "$set": {},
+            "$setOnInsert": {
+            }
+        }
+
+        self.conversations.update_one(
+            {"_id": conversation_id},
+            update,
+            upsert=True
+        )
 
     def list_user_threads(self, user_id: str) -> List[str]:
         """
@@ -127,13 +147,15 @@ class MongoDBManager:
 
         Steps:
         1. Use find() to get all documents where user_id matches
-        2. Use projection to only return the thread_name field: {"thread_name": 1, "_id": 0}
-        3. Extract the thread_name from each document and return as a list
+        2. Use projection to only return the thread_name field: {"thread_name": True, "_id": False}
 
-        Hint: list(collection.find({"user_id": user_id}, {"thread_name": 1, "_id": 0}))
-        Hint: Then extract thread_name from each result
+        Hint: list(self.conversations.find({"user_id": user_id}, {"thread_name": True, "_id": False}))
         """
-        pass  # fixme!
+        matches = list(self.conversations.find({}, {})) # fixme!
+        thread_names = []
+        for record in matches:
+            thread_names.append(record["thread_name"])
+        return thread_names
 
     def delete_conversation(self, user_id: str, thread_name: str) -> bool:
         """
