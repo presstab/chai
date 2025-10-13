@@ -38,7 +38,7 @@ class FlatFileManager:
         2 - If DNE, the create and save to disk using self.save_index()
         3 - Load the contents of conversations.json into self.conversations_index dictionary
         """
-        index_file = os.path.join(self.storage_dir, "conversations.json")
+        index_file = os.path.join(self.storage_dir, "chats.json")
         if not os.path.exists(index_file):
             self.save_index()
         else:
@@ -56,7 +56,7 @@ class FlatFileManager:
         Ensure the JSON is human-readable by using proper formatting.
         Hint: Use json.dump() with the 'indent' parameter for readable formatting.
         """
-        index_file = os.path.join(self.storage_dir, "conversations.json")
+        index_file = os.path.join(self.storage_dir, "chats.json")
         try:
             with open(index_file, 'w', encoding='utf-8') as file:
                 json.dump(self.conversations_index, file, indent=4)

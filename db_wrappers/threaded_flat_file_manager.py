@@ -1,36 +1,37 @@
 import os
 import json
 import shutil
+from typing import List
 
 class ThreadedFlatFileManager:
     """
         Extends FlatFileManager to handle multiple conversation threads per user.
         Each user has a folder, each thread has its own JSON file.
     """
-    def __init__(self, base_dir="converstions"):
+    def __init__(self, base_dir="conversations") -> None:
         self.base_dir = base_dir
         os.makedirs(base_dir, exist_ok=True)
         
-    def _get_user_dir(self, user_id):
+    def _get_user_dir(self, user_id: str) -> str:
         """Return the directory path for a specific user."""
         user_dir = os.path.join(self.base_dir, str(user_id))
         os.makedirs(user_dir, exist_ok=True)
         return user_dir
     
-    def get_threads(self, user_id):
+    def get_threads(self, user_id: str) -> List[str]:
         """Return a list of thread names for this user."""
         user_dir = self._get_user_dir(user_id)
         threads = []
         for file in os.listdir(user_dir):
             if file.endswith('.json'):
                 threads.append(file[:-5])
-            return threads
+        return threads
 
-    def _get_thread_path(self, user_id, thread_name):
+    def _get_thread_path(self, user_id: str, thread_name: str) -> str:
         """Return full file path for a user's thread file."""
         return os.path.join(self._get_user_dir(user_id), f"{thread_name}.json")
     
-    def load_thread(self, user_id, thread_name):
+    def load_thread(self, user_id: str, thread_name: str) -> List[dict]:
         """Load the conversation thread if it exists, else return empty list."""
         path = self._get_thread_path(user_id, thread_name)
         if os.path.exists(path):
@@ -41,7 +42,7 @@ class ThreadedFlatFileManager:
                 return []
         return []
     
-    def save_thread(self, user_id, thread_name, messages):
+    def save_thread(self, user_id: str, thread_name: str, messages: List[dict]) -> None:
         """Save a conversation thread (list of messages)."""
         path = self._get_thread_path(user_id, thread_name)
         try:
@@ -50,11 +51,23 @@ class ThreadedFlatFileManager:
         except IOError as e:
             print(f"Error saving thread file: {e}")
 
-    def append_message(self, user_id, thread_name, message):
+    def append_message(self, user_id: str, thread_name: str, message: dict) -> None:
         """Add a new message to the thread and save."""
         messages = self.load_thread(user_id, thread_name)
         messages.append(message)
         self.save_thread(user_id, thread_name, messages)
+        
+        # Not implemented in project
+    def delete_thread(self, user_id: str, thread_name: str) -> bool:
+        """Delete a specific thread for a user. Return True if successful."""
+        path = self._get_thread_path(user_id, thread_name)
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+                return True
+            except OSError as e:
+                print(f"Error deleting thread file: {e}")
+        return False
         
     def run_tests(self):
         print("Testing ThreadedFlatFileManager")
