@@ -1,6 +1,8 @@
 import time
 import os
 from db_wrappers.flat_file_manager import FlatFileManager
+from db_wrappers.threaded_flat_file_manager import ThreadedFlatFileManager
+
 
 def main():
     """
@@ -15,6 +17,8 @@ def main():
     # This object will handle all our file reading and writing.
     # Specify the storage directory as "data"
     db_manager = FlatFileManager(storage_dir="data")
+    db_Manger = ThreadedFlatFileManager(base_dir="conversations")
+    
 
     # --- TODO 6 (do this last): Create a way for a user_id to have multiple conversation threads
     # Requirements:

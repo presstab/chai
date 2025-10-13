@@ -1,0 +1,10 @@
+[
+    {
+        "role": "user",
+        "content": "hello"
+    },
+    {
+        "role": "assistant",
+        "content": "This is a mock response from the AI."
+    }
+]
