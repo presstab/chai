@@ -1,0 +1,42 @@
+[
+    {
+        "role": "user",
+        "content": "hi there",
+        "timestamp": "2025-10-12 22:38:26"
+    },
+    {
+        "role": "assistant",
+        "content": "Hello again, friend!",
+        "timestamp": "2025-10-12 22:38:26"
+    },
+    {
+        "role": "user",
+        "content": "loser",
+        "timestamp": "2025-10-12 22:38:28"
+    },
+    {
+        "role": "assistant",
+        "content": "Got it. Sounds cool!",
+        "timestamp": "2025-10-12 22:38:28"
+    },
+    {
+        "role": "user",
+        "content": "bye",
+        "timestamp": "2025-10-12 22:38:53"
+    },
+    {
+        "role": "assistant",
+        "content": "Oh wow, that's pretty neat.",
+        "timestamp": "2025-10-12 22:38:53"
+    },
+    {
+        "role": "user",
+        "content": "loser like her",
+        "timestamp": "2025-10-12 22:39:55"
+    },
+    {
+        "role": "assistant",
+        "content": "Got it. Sounds cool!",
+        "timestamp": "2025-10-12 22:39:55"
+    }
+]
