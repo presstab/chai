@@ -8,9 +8,9 @@ class ThreadedFlatFileManager:
         Extends FlatFileManager to handle multiple conversation threads per user.
         Each user has a folder, each thread has its own JSON file.
     """
-    def __init__(self, base_dir="conversations") -> None:
+    def __init__(self, base_dir: str = "conversations") -> None:
         self.base_dir = base_dir
-        os.makedirs(base_dir, exist_ok=True)
+        os.makedirs(self.base_dir, exist_ok=True)
         
     def _get_user_dir(self, user_id: str) -> str:
         """Return the directory path for a specific user."""
@@ -21,23 +21,23 @@ class ThreadedFlatFileManager:
     def get_threads(self, user_id: str) -> List[str]:
         """Return a list of thread names for this user."""
         user_dir = self._get_user_dir(user_id)
-        threads = []
-        for file in os.listdir(user_dir):
-            if file.endswith('.json'):
-                threads.append(file[:-5])
-        return threads
+        if not os.path.exists(user_dir):
+            return []
+        return [f[:-5] for f in os.listdir(user_dir) if f.endswith(".json")]
 
     def _get_thread_path(self, user_id: str, thread_name: str) -> str:
         """Return full file path for a user's thread file."""
-        return os.path.join(self._get_user_dir(user_id), f"{thread_name}.json")
+        user_dir = self._get_user_dir(user_id)
+        file_name = f"{thread_name}.json"
+        return os.path.join(user_dir, file_name)
     
     def load_thread(self, user_id: str, thread_name: str) -> List[dict]:
         """Load the conversation thread if it exists, else return empty list."""
         path = self._get_thread_path(user_id, thread_name)
         if os.path.exists(path):
             try:
-                with open(path, 'r', encoding='utf-8') as file:
-                    return json.load(file)
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
             except (json.JSONDecodeError, IOError):
                 return []
         return []
@@ -62,11 +62,8 @@ class ThreadedFlatFileManager:
         """Delete a specific thread for a user. Return True if successful."""
         path = self._get_thread_path(user_id, thread_name)
         if os.path.exists(path):
-            try:
-                os.remove(path)
-                return True
-            except OSError as e:
-                print(f"Error deleting thread file: {e}")
+            os.remove(path)
+            return True
         return False
         
     def run_tests(self):
@@ -109,5 +106,5 @@ class ThreadedFlatFileManager:
         
 if __name__ == "__main__":
     print("Testing ThreadedFlatFileManager")
-    threaded_manager = ThreadedFlatFileManager(base_dir="conversations")
+    threaded_manager = ThreadedFlatFileManager(base_dir="conversations_test")
     threaded_manager.run_tests()  
