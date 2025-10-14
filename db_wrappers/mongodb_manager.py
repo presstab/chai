@@ -95,7 +95,7 @@ class MongoDBManager:
 
         Hint: self.conversations.update_one({filter goes here}, {update goes here}, upsert=True)
         """
-        conversation_id = f"{}_{}" # fixme!
+        conversation_id = f"{user_id}_{thread_name}" # fixme!
         # fixme! add fields to document
         document = {
         }
