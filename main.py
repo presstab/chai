@@ -282,16 +282,21 @@ def main():
     # Don't forget to close the connection when done!
     db_manager.close()
 
-def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None:
+def run_chat(db_manager: MongoDBManager, thread_manager: ThreadedFlatFileManager, user_id: str, thread_name: str, conversation_id: str) -> None:
     """
     Runs the chat loop for a specific conversation thread.
     """
     # --- TODO 3: Load and display existing conversation ---
     # Time how long it takes to load the conversation
     start_time = time.perf_counter()
-    messages = None  # fixme! Use get_conversation
-    end_time = None # fixme!
-    duration = None # fixme!
+    messages = thread_manager.load_thread(user_id, thread_name)
+    if not messages:
+        try:
+            messages = db_manager.get_conversation(conversation_id)
+        except Exception:
+            messages = []
+    end_time = time.perf_counter()
+    duration = end_time - start_time
 
     if messages:
         print(f"\n--- Conversation History ({len(messages)} messages) ---")
@@ -307,7 +312,11 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
         if user_input.lower() == 'exit':
             print("Goodbye!")
             break
-    
+        if not user_input.strip():
+            print("Please enter a valid message.")
+            continue
+        
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         # --- TODO 4: Append messages using the efficient append_message() method ---
         # Steps:
         # 1. Start performance timer
@@ -319,22 +328,36 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
         # Note: We're calling append_message() TWICE (once for user, once for AI)
         # This is different from Lab 1 where we did one big write!
 
-        start_time = None  # fixme!
+        start_time = time.perf_counter()
 
         # Append user message
-        user_message = {"role": "user", "content": user_input}
+        user_message = {"role": "user", "content": user_input, "timestamp": timestamp}
         # fixme! Use append_message
+        messages.append(user_message)
+        print(f"You: ({timestamp}): {user_input}")
         # db_manager.
-
+        try:
+            db_manager.save_conversation(conversation_id, f"{conversation_id}.json", messages)
+        except Exception:
+            pass
+        thread_manager.save_thread(user_id, thread_name, messages)
+        
         # Create and append AI response
-        ai_response = "This is a mock response from the AI."
-        ai_message = {"role": "assistant", "content": ai_response}
+        ai_response = generated_ai_response(user_input)
+        ai_message = {"role": "assistant", "content": ai_response, "timestamp": timestamp}
         # fixme! Use append_message
+        messages.append(ai_message)
+        print(f"AI: {ai_response}")
         #db_manager.
+        try:
+            db_manager.save_conversation(conversation_id, f"{conversation_id}.json", messages)
+        except Exception:
+            pass
+        thread_manager.save_thread(user_id, thread_name, messages)
 
-        end_time = None  # fixme!
-        duration = None  # fixme!
-
+        end_time = time.perf_counter()
+        duration = end_time - start_time
+        print(f"(Operation took {duration:.4f} seconds)\n")
 
 
 if __name__ == "__main__":
