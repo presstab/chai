@@ -2,3 +2,6 @@
 name = "chai"
 version = "0.0.1"
 requires-python = ">=3.1"
+dependencies = [
+    "pymongo>=3.13.0",
+]
