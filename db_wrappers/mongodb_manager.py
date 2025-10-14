@@ -12,21 +12,23 @@ class MongoDBManager:
     Each conversation is stored as a single document with an array of messages.
     """
 
-    def __init__(self, connection_string: str = "mongodb://localhost:27017/", database_name: str = "chai_db"):
+    def __init__(self, connection_string: str = "mongodb+srv://ahezekiah_db_mongo:lab2mongodb@cluster0.ew8zh8g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", database_name: str = "chai_db"):
         """
+        --- TODO 1: Initialize MongoDB Connection ---
         Initializes the MongoDBManager.
 
         Args:
             connection_string (str): MongoDB connection string
             database_name (str): Name of the database to use
+            
+        Steps:
+        1. Create a MongoClient using the connection_string
+        2. Get the database using database_name
+        3. Get the 'conversations' collection from the database
+        Store these as instance variables: self.client, self.db, self.conversations
+        Hint: self.client[database_name] gets a database
+        Hint: db[collection_name] gets a collection - use "conversations" as the collection_name
         """
-        # --- TODO 1: Initialize MongoDB Connection ---
-        # 1. Create a MongoClient using the connection_string
-        # 2. Get the database using database_name
-        # 3. Get the 'conversations' collection from the database
-        # Store these as instance variables: self.client, self.db, self.conversations
-        # Hint: self.client[database_name] gets a database
-        # Hint: db[collection_name] gets a collection - use "conversations" as the collection_name
         self.client = MongoClient(connection_string)
         self.db = None #fixme!
         self.conversations = None #fixme!
@@ -62,7 +64,7 @@ class MongoDBManager:
 
         Hint: find_one({"user_id": user_id, "thread_name": thread_name})
         """
-        # document = self.conversations. fixme!
+        document = self.conversations #fixme!
         if not document or "messages" not in document:
             return []
         return document["messages"]
@@ -193,8 +195,8 @@ if __name__ == "__main__":
     print("Testing MongoDBManager")
 
     # Update this connection string for your setup
-    connection_string = "mongodb://localhost:27017/"
-    # connection_string = "mongodb+srv://username:password@cluster.mongodb.net/"
+    # connection_string = "mongodb://localhost:27017/"
+    connection_string = "mongodb+srv://ahezekiah_db_mongo:lab2mongodb@cluster0.ew8zh8g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster"
 
     manager = MongoDBManager(connection_string=connection_string, database_name="chai_test_db")
 
