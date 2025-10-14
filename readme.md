@@ -28,3 +28,50 @@ This lab focuses on building the foundational persistence layer using a simple f
     - Performance was good for small conversations but slowed down as data grew. 
     Each write required reloading and saving the entire file, which became inefficient over time. 
     It was fine for simple testing but not ideal for frequent or large-scale chat operations.
+
+
+## Lab 2: MongoDB Integration & Performance Analysis
+
+## Questions
+1. Performance Analysis
+Run performance_test.py and record the results. What did you observe about:
+    - 
+    How append times changed as the number of messages grew for flat files vs MongoDB?
+        - 
+    The difference in read times for retrieving the full conversation?
+        - 
+Explain why you see these performance characteristics.
+    - 
+2. Atomic Operations
+In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. Why is this important for a chat application where multiple messages might be added rapidly?
+    - 
+3. Scalability
+Imagine your chat application goes viral and now has 1 million users, each with an average of 10 conversation threads containing 500 messages each.
+Compare how FlatFileManager and MongoDBManager would handle:
+    Finding all threads for a specific user
+        - 
+    Loading a specific conversation
+        - 
+    Storage organization and file system limits
+        - 
+4. Data Modeling Design Challenge (5 points)
+Currently, each conversation is stored as a single document with an embedded array of messages:
+{
+  "_id": "user_123_work",
+  "messages": [...]
+}
+An alternative design would be to store each message as its own document:
+{
+  "_id": "msg_001",
+  "conversation_id": "user_123_work",
+  "role": "user",
+  "content": "Hello!",
+  "timestamp": "..."
+}
+Describe:
+    One advantage of the embedded messages design (what we currently use)
+        - 
+    One advantage of the separate message documents design
+        - 
+    A scenario where you would choose the separate messages design instead
+        - 

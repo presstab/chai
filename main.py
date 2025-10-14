@@ -6,6 +6,7 @@ from datetime import datetime
 import random
 from db_wrappers.mongodb_manager import MongoDBManager
 
+# Generate AI Mock Responses
 def generated_ai_response(user_input: str) -> str:
     """A mock AI response based on user input."""
     responses_question = [
@@ -42,7 +43,8 @@ def generated_ai_response(user_input: str) -> str:
     else:
         return random.choice(responses_statement)
 
-# From Lab 1
+
+# For Lab 1, Flat File Edition
 def main():
     """
     Main function to run the Chai AI chat application.
@@ -122,7 +124,7 @@ def main():
 
     print(f"\nUsing conversation ID: {conversation_id}\n")
     run_chat(db_manager, thread_manager, user_id, thread_name, conversation_id)
-    
+
 def run_chat(db_manager: FlatFileManager, thread_manager: ThreadedFlatFileManager, user_id: str, thread_name: str, conversation_id: str) -> None:
     # --- TODO 2: Check if conversation already exists, printout conversation if so ---
     #   - Add a timer that times how long it took to use get_conversation and print the results after
@@ -155,8 +157,54 @@ def run_chat(db_manager: FlatFileManager, thread_manager: ThreadedFlatFileManage
     print(f"Conversation: '{thread_name}' (User ID: '{user_id}')")
     print("Type 'exit' to quit.\n")
     
+    while True:
+        user_input = input("> ").strip()
+        if user_input.lower() == 'exit':
+            print("Goodbye!")
+            break
+        if not user_input.strip():
+            print("Please enter a valid message.")
+            continue
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# From Lab 2
+        # --- TODO 3: Start the performance timer ---
+        # Record the start time before performing the database operations.
+        # Use time.perf_counter() for high precision.
+        start_time = time.perf_counter()
+
+        # 2. Append the new user message to the list of messages using messages.append()
+        #    Each message should be a dictionary, e.g., {"role": "user", "content": user_input}
+        user_message = {"role": "user", "content": user_input, "timestamp": timestamp}
+        messages.append(user_message)
+        print(f"You: ({timestamp}): {user_input}")
+
+        # 3. Create a mock AI response and append it to the list.
+        #    The AI response should also be a dictionary using format: {"role": "assistant", "content": ai_response}
+        ai_response = generated_ai_response(user_input)
+        ai_message = {"role": "assistant", "content": ai_response, "timestamp": timestamp}
+        messages.append(ai_message)
+        print(f"AI: {ai_response}")
+
+        # 4. Save the *entire*, updated list of messages back to the file.
+        #    Call your db_manager's save method.
+        try:
+            # fixme! use db manager save method here
+            db_manager.save_conversation(conversation_id, f"{conversation_id}.json", messages)
+        except Exception:
+            pass
+        thread_manager.save_thread(user_id, thread_name, messages)
+        # ----------------------------------------------------
+
+        # --- TODO 5: Stop the timer and calculate duration ---
+        # Record the end time and calculate the difference to see how long the
+        # entire read-append-write cycle took.
+        end_time = time.perf_counter()
+        
+        # ---------------------------------------------------
+        print(f"(Operation took {duration:.4f} seconds)\n")
+    
+
+# For Lab 2, MongoDB Edition
 def main():
     """
     Main function to run the Chai AI chat application with MongoDB.
@@ -229,7 +277,7 @@ def main():
     # Don't forget to close the connection when done!
     db_manager.close()
 
-def run_chat(db_manager: MongoDBManager, thread_manager: ThreadedFlatFileManager, user_id: str, thread_name: str, conversation_id: str) -> None:
+def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None:
     """
     Runs the chat loop for a specific conversation thread.
     """
@@ -250,50 +298,11 @@ def run_chat(db_manager: MongoDBManager, thread_manager: ThreadedFlatFileManager
     print(f"Conversation: '{thread_name}'. Type 'exit' to quit.")
 
     while True:
-        user_input = input("> ").strip()
+        user_input = input("> ")
         if user_input.lower() == 'exit':
             print("Goodbye!")
             break
-        if not user_input.strip():
-            print("Please enter a valid message.")
-            continue
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # --- TODO 3: Start the performance timer ---
-        # Record the start time before performing the database operations.
-        # Use time.perf_counter() for high precision.
-        start_time = time.perf_counter()
-
-        # 2. Append the new user message to the list of messages using messages.append()
-        #    Each message should be a dictionary, e.g., {"role": "user", "content": user_input}
-        user_message = {"role": "user", "content": user_input, "timestamp": timestamp}
-        messages.append(user_message)
-        print(f"You: ({timestamp}): {user_input}")
-
-        # 3. Create a mock AI response and append it to the list.
-        #    The AI response should also be a dictionary using format: {"role": "assistant", "content": ai_response}
-        ai_response = generated_ai_response(user_input)
-        ai_message = {"role": "assistant", "content": ai_response, "timestamp": timestamp}
-        messages.append(ai_message)
-        print(f"AI: {ai_response}")
-
-        # 4. Save the *entire*, updated list of messages back to the file.
-        #    Call your db_manager's save method.
-        try:
-            # fixme! use db manager save method here
-            db_manager.save_conversation(conversation_id, f"{conversation_id}.json", messages)
-        except Exception:
-            pass
-        thread_manager.save_thread(user_id, thread_name, messages)
-        # ----------------------------------------------------
-
-        # --- TODO 5: Stop the timer and calculate duration ---
-        # Record the end time and calculate the difference to see how long the
-        # entire read-append-write cycle took.
-        end_time = time.perf_counter()
-        
-        # ---------------------------------------------------
-        print(f"(Operation took {duration:.4f} seconds)\n")
+    
         # --- TODO 4: Append messages using the efficient append_message() method ---
         # Steps:
         # 1. Start performance timer
