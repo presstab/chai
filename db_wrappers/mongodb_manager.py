@@ -30,7 +30,7 @@ class MongoDBManager:
         Hint: db[collection_name] gets a collection - use "conversations" as the collection_name
         """
         self.client = MongoClient(connection_string)
-        self.db = None #fixme!
+        self.db = database_name
         self.conversations = None #fixme!
 
         self._ensure_indexes()
@@ -69,7 +69,7 @@ class MongoDBManager:
             return []
         return document["messages"]
 
-    def save_conversation(self, user_id: str, thread_name: str, messages: List[Dict]) -> None:
+    def save_conversation(self, user_id: str, thread_name: str, messages: List[Dict], _id: str, created_at: str, updated_at: str) -> None:
         """
         --- TODO 3: Save a conversation to MongoDB ---
         Saves the entire conversation, replacing the existing one if it exists.
@@ -96,8 +96,15 @@ class MongoDBManager:
         Hint: self.conversations.update_one({filter goes here}, {update goes here}, upsert=True)
         """
         conversation_id = f"{user_id}_{thread_name}" # fixme!
+        timestamp = datetime.now(UTC).isoformat()
         # fixme! add fields to document
         document = {
+            _id: conversation_id,
+            user_id: user_id,
+            thread_name: thread_name,
+            messages: messages,
+            created_at: timestamp,
+            updated_at: timestamp,
         }
         # fixme! self.conversations.
 
