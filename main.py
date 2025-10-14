@@ -59,7 +59,6 @@ def run_chat(db_manager: FlatFileManager, user_id: str, conversation_id: str):
             print("Goodbye!")
             break
 
-
         start_time = time.perf_counter()
 
         # Load conversation if empty
