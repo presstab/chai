@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 
 
+
 class MongoDBManager:
     """
     Manages storing and retrieving chat conversations in MongoDB.
@@ -79,16 +80,16 @@ class MongoDBManager:
         Steps:
         1. Create a conversation_id by combining user_id and thread_name (e.g., f"{user_id}_{thread_name}")
         2. Create a document dictionary with:
-           - _id: conversation_id
-           - user_id: user_id
-           - thread_name: thread_name
-           - messages: messages
-           - created_at: current timestamp (use datetime.now(UTC).isoformat())
-           - updated_at: current timestamp
+            - _id: conversation_id
+            - user_id: user_id
+            - thread_name: thread_name
+            - messages: messages
+            - created_at: current timestamp (use datetime.now(UTC).isoformat())
+            - updated_at: current timestamp
         3. Use update_one() with upsert=True to insert or replace the document
-           - Filter: {"_id": conversation_id}
-           - Update: {"$set": document}
-           - upsert=True creates the document if it doesn't exist
+            - Filter: {"_id": conversation_id}
+            - Update: {"$set": document}
+            - upsert=True creates the document if it doesn't exist
 
         Hint: self.conversations.update_one({filter goes here}, {update goes here}, upsert=True)
         """
@@ -111,11 +112,11 @@ class MongoDBManager:
         Steps:
         1. Create conversation_id like in save_conversation
         2. Use update_one() with $push to append the message to the messages array
-           - Filter: {"_id": conversation_id}
-           - Update: {"$push": {"messages": message}, "$set": {"updated_at": current_timestamp}}
-           - upsert=True to create the document if it doesn't exist
+            - Filter: {"_id": conversation_id}
+            - Update: {"$push": {"messages": message}, "$set": {"updated_at": current_timestamp}}
+            - upsert=True to create the document if it doesn't exist
         3. If upsert creates a new document, you should also set user_id, thread_name, and created_at
-           - Use $setOnInsert for fields that should only be set during creation
+            - Use $setOnInsert for fields that should only be set during creation
 
         Hint: $push adds to an array, $setOnInsert sets values only on insert
         Hint: update_one(filter, {"$push": {...}, "$set": {...}, "$setOnInsert": {...}}, upsert=True)
