@@ -54,7 +54,7 @@ Compare how FlatFileManager and MongoDBManager would handle:
         - 
     Storage organization and file system limits
         - 
-4. Data Modeling Design Challenge (5 points)
+4. Data Modeling Design Challenge
 Currently, each conversation is stored as a single document with an embedded array of messages:
 {
   "_id": "user_123_work",
