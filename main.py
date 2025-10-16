@@ -43,6 +43,7 @@ def generated_ai_response(user_input: str) -> str:
     else:
         return random.choice(responses_statement)
 
+
 # For Lab 1, Flat File Edition
 def main():
     """
