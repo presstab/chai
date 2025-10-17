@@ -1,0 +1,32 @@
+[
+  {
+    "role": "user",
+    "content": "hi there",
+    "timestamp": "2025-10-12 22:36:36"
+  },
+  {
+    "role": "assistant",
+    "content": "Yo! What's up?",
+    "timestamp": "2025-10-12 22:36:36"
+  },
+  {
+    "role": "user",
+    "content": "number",
+    "timestamp": "2025-10-12 22:36:40"
+  },
+  {
+    "role": "assistant",
+    "content": "Oh wow, that's pretty neat.",
+    "timestamp": "2025-10-12 22:36:40"
+  },
+  {
+    "role": "user",
+    "content": "gravy",
+    "timestamp": "2025-10-12 22:37:15"
+  },
+  {
+    "role": "assistant",
+    "content": "Oh wow, that's pretty neat.",
+    "timestamp": "2025-10-12 22:37:15"
+  }
+]

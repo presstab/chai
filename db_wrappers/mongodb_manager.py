@@ -5,29 +5,32 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 
 
+
 class MongoDBManager:
     """
     Manages storing and retrieving chat conversations in MongoDB.
     Each conversation is stored as a single document with an array of messages.
     """
 
-    def __init__(self, connection_string: str = "mongodb://localhost:27017/", database_name: str = "chai_db"):
+    def __init__(self, connection_string: str = "mongodb+srv://ahezekiah_db_mongo:lab2mongodb@cluster0.ew8zh8g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", database_name: str = "chai_db"):
         """
+        --- TODO 1: Initialize MongoDB Connection ---
         Initializes the MongoDBManager.
 
         Args:
             connection_string (str): MongoDB connection string
             database_name (str): Name of the database to use
+            
+        Steps:
+        1. Create a MongoClient using the connection_string
+        2. Get the database using database_name
+        3. Get the 'conversations' collection from the database
+        Store these as instance variables: self.client, self.db, self.conversations
+        Hint: self.client[database_name] gets a database
+        Hint: db[collection_name] gets a collection - use "conversations" as the collection_name
         """
-        # --- TODO 1: Initialize MongoDB Connection ---
-        # 1. Create a MongoClient using the connection_string
-        # 2. Get the database using database_name
-        # 3. Get the 'conversations' collection from the database
-        # Store these as instance variables: self.client, self.db, self.conversations
-        # Hint: self.client[database_name] gets a database
-        # Hint: db[collection_name] gets a collection - use "conversations" as the collection_name
         self.client = MongoClient(connection_string)
-        self.db = None #fixme!
+        self.db = database_name
         self.conversations = None #fixme!
 
         self._ensure_indexes()
@@ -61,12 +64,12 @@ class MongoDBManager:
 
         Hint: find_one({"user_id": user_id, "thread_name": thread_name})
         """
-        # document = self.conversations. fixme!
+        document = self.conversations #fixme!
         if not document or "messages" not in document:
             return []
         return document["messages"]
 
-    def save_conversation(self, user_id: str, thread_name: str, messages: List[Dict]) -> None:
+    def save_conversation(self, user_id: str, thread_name: str, messages: List[Dict], _id: str, created_at: str, updated_at: str) -> None:
         """
         --- TODO 3: Save a conversation to MongoDB ---
         Saves the entire conversation, replacing the existing one if it exists.
@@ -79,22 +82,29 @@ class MongoDBManager:
         Steps:
         1. Create a conversation_id by combining user_id and thread_name (e.g., f"{user_id}_{thread_name}")
         2. Create a document dictionary with:
-           - _id: conversation_id
-           - user_id: user_id
-           - thread_name: thread_name
-           - messages: messages
-           - created_at: current timestamp (use datetime.now(UTC).isoformat())
-           - updated_at: current timestamp
+            - _id: conversation_id
+            - user_id: user_id
+            - thread_name: thread_name
+            - messages: messages
+            - created_at: current timestamp (use datetime.now(UTC).isoformat())
+            - updated_at: current timestamp
         3. Use update_one() with upsert=True to insert or replace the document
-           - Filter: {"_id": conversation_id}
-           - Update: {"$set": document}
-           - upsert=True creates the document if it doesn't exist
+            - Filter: {"_id": conversation_id}
+            - Update: {"$set": document}
+            - upsert=True creates the document if it doesn't exist
 
         Hint: self.conversations.update_one({filter goes here}, {update goes here}, upsert=True)
         """
-        conversation_id = f"{}_{}" # fixme!
+        conversation_id = f"{user_id}_{thread_name}" # fixme!
+        timestamp = datetime.now(UTC).isoformat()
         # fixme! add fields to document
         document = {
+            _id: conversation_id,
+            user_id: user_id,
+            thread_name: thread_name,
+            messages: messages,
+            created_at: timestamp,
+            updated_at: timestamp,
         }
         # fixme! self.conversations.
 
@@ -111,11 +121,11 @@ class MongoDBManager:
         Steps:
         1. Create conversation_id like in save_conversation
         2. Use update_one() with $push to append the message to the messages array
-           - Filter: {"_id": conversation_id}
-           - Update: {"$push": {"messages": message}, "$set": {"updated_at": current_timestamp}}
-           - upsert=True to create the document if it doesn't exist
+            - Filter: {"_id": conversation_id}
+            - Update: {"$push": {"messages": message}, "$set": {"updated_at": current_timestamp}}
+            - upsert=True to create the document if it doesn't exist
         3. If upsert creates a new document, you should also set user_id, thread_name, and created_at
-           - Use $setOnInsert for fields that should only be set during creation
+            - Use $setOnInsert for fields that should only be set during creation
 
         Hint: $push adds to an array, $setOnInsert sets values only on insert
         Hint: update_one(filter, {"$push": {...}, "$set": {...}, "$setOnInsert": {...}}, upsert=True)
@@ -192,8 +202,8 @@ if __name__ == "__main__":
     print("Testing MongoDBManager")
 
     # Update this connection string for your setup
-    connection_string = "mongodb://localhost:27017/"
-    # connection_string = "mongodb+srv://username:password@cluster.mongodb.net/"
+    # connection_string = "mongodb://localhost:27017/"
+    connection_string = "mongodb+srv://ahezekiah_db_mongo:lab2mongodb@cluster0.ew8zh8g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster"
 
     manager = MongoDBManager(connection_string=connection_string, database_name="chai_test_db")
 

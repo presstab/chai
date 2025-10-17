@@ -28,6 +28,9 @@ class FlatFileManager:
         If it doesn't exist, this method should create it.
         Hint: Use os.makedirs() and its `exist_ok` parameter.
         """
+        if not os.path.exists(self.storage_dir):
+            os.makedirs(self.storage_dir, exist_ok=True)
+
         os.makedirs(self.storage_dir, exist_ok=True)
 
     def _init_index(self) -> None:
@@ -37,6 +40,15 @@ class FlatFileManager:
         2 - If DNE, the create and save to disk using self.save_index()
         3 - Load the contents of conversations.json into self.conversations_index dictionary
         """
+        index_file = os.path.join(self.storage_dir, "chats.json")
+        if not os.path.exists(index_file):
+            self.save_index()
+        else:
+            try:
+                with open(index_file, 'r', encoding='utf-8') as file:
+                    self.conversations_index = json.load(file)
+            except (json.JSONDecodeError, IOError):
+                self.conversations_index = {}
         index_file = os.path.join(self.storage_dir, "conversations.json")
 
         if not os.path.exists(index_file):
@@ -54,6 +66,12 @@ class FlatFileManager:
         Ensure the JSON is human-readable by using proper formatting.
         Hint: Use json.dump() with the 'indent' parameter for readable formatting.
         """
+        index_file = os.path.join(self.storage_dir, "chats.json")
+        try:
+            with open(index_file, 'w', encoding='utf-8') as file:
+                json.dump(self.conversations_index, file, indent=4)
+        except IOError as e:
+            print(f"Error saving index file: {e}")
         index_file = os.path.join(self.storage_dir, "conversations.json")
         with open(index_file, 'w') as f:
             json.dump(self.conversations_index, f, indent=2)
@@ -70,6 +88,14 @@ class FlatFileManager:
         """
         if conversation_id not in self.conversations_index:
             return []
+        filepath = os.path.join(self.storage_dir, self.conversations_index[conversation_id])
+        if os.path.exists(filepath):
+            try:
+                with open(filepath, 'r', encoding='utf-8') as file:
+                    messages = json.load(file)
+                    return messages
+            except (json.JSONDecodeError, IOError):
+                return []
 
         filepath = os.path.join(self.storage_dir, self.conversations_index[conversation_id])
 
@@ -91,6 +117,14 @@ class FlatFileManager:
             - Use JSON formatting to make the file human-readable (e.g., indentation).
             Hint: Use `json.dump()` with the `indent` parameter.
         """
+        self.conversations_index[conversation_id] = relative_filepath
+        self.save_index()
+        filepath = os.path.join(self.storage_dir, relative_filepath)
+        try:
+            with open(filepath, 'w', encoding='utf-8') as file:
+                json.dump(messages, file, indent=4)
+        except IOError as e:
+            print(f"Error saving conversation file: {e}")
         # Add to index
         self.conversations_index[conversation_id] = relative_filepath
 
@@ -141,3 +175,4 @@ if __name__ == "__main__":
     print("Testing FlatFileManager")
     manager = FlatFileManager(storage_dir="data_test")
     manager.run_tests()
+    

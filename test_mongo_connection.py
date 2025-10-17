@@ -9,15 +9,20 @@ from pymongo import MongoClient
 # **IMPORTANT** You must set the environment variable MONGO_KEY from your terminal if you are using Atlas
 # This is something that does not persist from one terminal session to another, so remember to do it!
 # For Windows Command Prompt: set MONGO_KEY=password_here
-# For Windows PowerShell: $env:MONGO_KEY = "password_here"
+# For Windows PowerShell: $env:MONGO_KEY = "lab2mongodb"
 # For Mac/Linux: export MONGO_KEY="password_here"
-user = "tom" # replace with your username in Atlas
-password = os.getenv("MONGO_KEY")
+user = os.getenv("MONGO_USER") # replace with your username in Atlas
+password = os.getenv("MONGO_PASSWORD")
+srv = os.getenv("MONGO_SRV")
+cluster = os.getenv("MONGO_CLUSTER")
+requirements = os.getenv("MONGO_REQURIREMENTS")
 # Edit the url to use the url it gives you - remember to enter username and password as is done below
-connection_string = f"mongodb+srv://{user}:{password}@cluster0.3walskx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+connection_string = f"{srv}://{user}:{password}@{cluster}/{requirements}"
+# mongodb+srv://ahezekiah_db_mongo:lab2mongodb@cluster0.ew8zh8g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
 
 # example for Local mongodb
-connection_string = "mongodb://localhost:27017/"
+# connection_string = "mongodb://localhost:27017/"
 
 try:
     client = MongoClient(connection_string)
