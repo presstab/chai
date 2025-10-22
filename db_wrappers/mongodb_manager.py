@@ -4,8 +4,6 @@ from typing import List, Dict, Optional
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-
-
 class MongoDBManager:
     """
     Manages storing and retrieving chat conversations in MongoDB.
