@@ -1,91 +1,70 @@
 import time
 import os
-from db_wrappers.mongodb_manager import MongoDBManager
+from db_wrappers.flat_file_manager import FlatFileManager
 
 
 def main():
     """
-    Main function to run the Chai AI chat application with MongoDB.
+    Main function to run the Chai AI chat application using flat files.
     """
-    print("Welcome to Chai (MongoDB Edition)!")
+    print("Welcome to Chai!")
 
-    # --- TODO 1: Configure MongoDB Connection ---
-    # Update this connection string for your MongoDB setup
-    # For local: "mongodb://localhost:27017/"
-    # For Atlas: "mongodb+srv://username:password@cluster.mongodb.net/"
+    # Configure flat-file storage directory
+    storage_dir = "data"
 
-    # example for Mongo Atlas
-    # **IMPORTANT** You must set the environment variable MONGO_KEY from your terminal if you are using Atlas
-    # This is something that does not persist from one terminal session to another, so remember to do it!
-    # For Windows Command Prompt: set MONGO_KEY=password_here
-    # For Windows PowerShell: $env:MONGO_KEY = "password_here"
-    # For Mac/Linux: export MONGO_KEY="password_here"
-    #user = "tom" # replace with your username in Atlas
-    #password = os.getenv("MONGO_KEY")
-    #Edit the url to use the url it gives you - remember to enter username and password as is done below
-    #connection_string = f"mongodb+srv://{user}:{password}@cluster0.3walskx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-
-    # example for Local mongodb
-    # connection_string = "mongodb://localhost:27017/"
-
-    db_manager = MongoDBManager(connection_string=connection_string, database_name="chai_db")
+    db_manager = FlatFileManager(storage_dir=storage_dir)
 
     user_id = input("Please enter your user ID to begin: ")
 
-    # --- TODO 2: List existing threads and let user choose ---
-    # Steps:
-    # 1. Get list of existing threads for this user using list_user_threads()
-    # 2. If threads exist (Step 2 already done for you, understand the flow, then skip to 3):
-    #    - Print them out with numbers (e.g., "1. work_project")
-    #    - Print an option to create a new thread (e.g., "N. Create new thread")
-    #    - Get user's choice
-    # 3. If no threads exist or user chooses new:
-    #    - Prompt for a new thread name (already done for you, skip to next)
-    #    - Store the new thread_name
+    # --- Thread selection (flat-file) ---
+    # Naming scheme: conversation_id = f"{user_id}:{thread_name}"
+    # Files stored as: f"{user_id}__{thread_name}.json"
 
-    threads = None  # fixme!
-
-    for i, thread_name in enumerate(threads):
-        print(f"{i}. {thread_name}")
-    print(f"{len(threads)}. Create new thread")
-    user_selection = input("Enter a thread number:")
-
-    if not user_selection.isdigit():
-        print("Not a number, exiting")
-        return
-
-    choice = int(user_selection)
-
-    if choice > len(threads):
-        print("Selection is too large of a number")
-        return
+    # Build list of existing thread names for this user from the index
+    prefix = f"{user_id}:"
+    threads = [cid.split(":", 1)[1] for cid in db_manager.conversations_index.keys() if cid.startswith(prefix)]
 
     thread_name = ""
-    if not threads or choice == len(threads):
-        # prompt for thread name
-        thread_name = input("Enter thread name:")
-        # Store new thread name
-        # fixme!
-        # db_manager.save_conversation
+    if threads:
+        for i, t in enumerate(threads):
+            print(f"{i}. {t}")
+        print(f"{len(threads)}. Create new thread")
+
+        user_selection = input("Enter a thread number: ")
+        if not user_selection.isdigit():
+            print("Not a number, exiting")
+            return
+        choice = int(user_selection)
+        if choice > len(threads):
+            print("Selection is too large of a number")
+            return
+        if choice == len(threads):
+            thread_name = input("Enter thread name: ").strip() or "default"
+        else:
+            thread_name = threads[choice]
     else:
-        thread_name = threads[choice]
+        # No threads yet; prompt for a new one and create an empty conversation record
+        thread_name = input("Enter thread name: ").strip() or "default"
+
+    # Ensure conversation exists in index (create empty if new)
+    conversation_id = f"{user_id}:{thread_name}"
+    if conversation_id not in db_manager.conversations_index:
+        relative_filepath = f"{user_id}__{thread_name}.json"
+        db_manager.save_conversation(conversation_id, relative_filepath, [])
 
     run_chat(db_manager, user_id, thread_name)
 
-    # Don't forget to close the connection when done!
-    db_manager.close()
 
-
-def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None:
+def run_chat(db_manager: FlatFileManager, user_id: str, thread_name: str) -> None:
     """
     Runs the chat loop for a specific conversation thread.
     """
-    # --- TODO 3: Load and display existing conversation ---
-    # Time how long it takes to load the conversation
+    # Load and display existing conversation
+    conversation_id = f"{user_id}:{thread_name}"
     start_time = time.perf_counter()
-    messages = None  # fixme! Use get_conversation
-    end_time = None # fixme!
-    duration = None # fixme!
+    messages = db_manager.get_conversation(conversation_id)
+    end_time = time.perf_counter()
+    duration = end_time - start_time
 
     if messages:
         print(f"\n--- Conversation History ({len(messages)} messages) ---")
@@ -102,32 +81,30 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
             print("Goodbye!")
             break
 
-        # --- TODO 4: Append messages using the efficient append_message() method ---
-        # Steps:
-        # 1. Start performance timer
-        # 2. Append user message using append_message()
-        # 3. Create mock AI response
-        # 4. Append AI response using append_message()
-        # 5. Stop timer and calculate duration
-        #
-        # Note: We're calling append_message() TWICE (once for user, once for AI)
-        # This is different from Lab 1 where we did one big write!
+        # Read-append-write using flat file manager
+        start_time = time.perf_counter()
 
-        start_time = None  # fixme!
+        # Ensure messages list is current
+        if messages is None:
+            messages = db_manager.get_conversation(conversation_id)
 
         # Append user message
         user_message = {"role": "user", "content": user_input}
-        # fixme! Use append_message
-        # db_manager.
+        messages.append(user_message)
 
         # Create and append AI response
         ai_response = "This is a mock response from the AI."
         ai_message = {"role": "assistant", "content": ai_response}
-        # fixme! Use append_message
-        #db_manager.
+        messages.append(ai_message)
 
-        end_time = None  # fixme!
-        duration = None  # fixme!
+        # Save updated conversation
+        relative_filepath = db_manager.conversations_index.get(
+            conversation_id, f"{user_id}__{thread_name}.json"
+        )
+        db_manager.save_conversation(conversation_id, relative_filepath, messages)
+
+        end_time = time.perf_counter()
+        duration = end_time - start_time
 
         print(f"AI: {ai_response}")
         print(f"(Operation took {duration:.4f} seconds)")
