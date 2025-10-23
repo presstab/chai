@@ -1,6 +1,140 @@
 import time
 import os
+import asyncio
+import sys
+from typing import List, Dict, Optional, Callable
 from db_wrappers.flat_file_manager import FlatFileManager
+
+try:
+    # Optional: async OpenAI client
+    from openai import AsyncOpenAI  # type: ignore
+except Exception:  # ImportError or other
+    AsyncOpenAI = None  # type: ignore
+
+
+def load_env_from_dotenv(dotenv_path: str = ".env") -> None:
+    """
+    Minimal .env loader. Loads KEY=VALUE pairs into os.environ if not already set.
+    Comments (# ...) and blank lines are ignored.
+    """
+    if not os.path.exists(dotenv_path):
+        return
+    try:
+        with open(dotenv_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, val = line.split("=", 1)
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = val
+    except OSError:
+        pass
+
+
+async def generate_ai_response(messages: List[Dict[str, str]], *, model: Optional[str] = None) -> str:
+    """
+    Generate an AI response using OpenAI's async client.
+    Expects messages in Chat Completions format: [{"role": "user"|"assistant"|"system", "content": str}, ...]
+    """
+    if AsyncOpenAI is None:
+        return "[OpenAI client not installed. Install 'openai' package to enable AI.]"
+
+    api_key = os.getenv("OPENAI_KEY")
+    if not api_key:
+        return "[OPENAI_KEY not set. Add it to a .env file in this directory.]"
+
+    base_url = os.getenv("BASE_URL")
+    client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+    use_model = model or os.getenv("MODEL") or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    # Prepend a light system prompt
+    prompt_messages = [{"role": "system", "content": "You are Chai, a concise, helpful assistant."}] + messages
+
+    try:
+        resp = await client.chat.completions.create(
+            model=use_model,
+            messages=prompt_messages,  # type: ignore[arg-type]
+            temperature=0.7,
+        )
+        return (resp.choices[0].message.content or "").strip()
+    except Exception as e:
+        return f"[OpenAI error: {e}]"
+
+
+async def stream_ai_response(
+    messages: List[Dict[str, str]],
+    *,
+    model: Optional[str] = None,
+    on_delta: Optional[Callable[[str], None]] = None,
+) -> str:
+    """
+    Stream an AI response token-by-token. Returns the full response text.
+    Prints deltas via `on_delta` if provided; defaults to writing to stdout.
+    """
+    if AsyncOpenAI is None:
+        # Fallback to non-streaming placeholder
+        text = "[OpenAI client not installed. Install 'openai' to enable streaming.]"
+        if on_delta:
+            on_delta(text)
+        else:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+        return text
+
+    api_key = os.getenv("OPENAI_KEY")
+    if not api_key:
+        text = "[OPENAI_KEY not set. Add it to a .env file in this directory.]"
+        if on_delta:
+            on_delta(text)
+        else:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+        return text
+
+    base_url = os.getenv("BASE_URL")
+    client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+    use_model = model or os.getenv("MODEL") or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    # Prepend a light system prompt
+    prompt_messages = [{"role": "system", "content": "You are Chai, a concise, helpful assistant."}] + messages
+
+    buffer: List[str] = []
+
+    def emit(text: str) -> None:
+        buffer.append(text)
+        if on_delta:
+            on_delta(text)
+        else:
+            sys.stdout.write(text)
+            sys.stdout.flush()
+
+    try:
+        stream = await client.chat.completions.create(
+            model=use_model,
+            messages=prompt_messages,  # type: ignore[arg-type]
+            temperature=0.7,
+            stream=True,
+        )
+        async for chunk in stream:
+            try:
+                if not chunk.choices:
+                    continue
+                delta = chunk.choices[0].delta
+                if delta and getattr(delta, "content", None):
+                    emit(delta.content)
+            except Exception:
+                # Swallow per-chunk parsing errors but continue streaming
+                continue
+    except Exception as e:
+        err = f"[OpenAI stream error: {e}]"
+        emit(err)
+
+    return "".join(buffer).strip()
 
 
 def main():
@@ -8,6 +142,9 @@ def main():
     Main function to run the Chai AI chat application using flat files.
     """
     print("Welcome to Chai!")
+
+    # Load .env for OPENAI_KEY, etc.
+    load_env_from_dotenv()
 
     # Configure flat-file storage directory
     storage_dir = "data"
@@ -92,8 +229,12 @@ def run_chat(db_manager: FlatFileManager, user_id: str, thread_name: str) -> Non
         user_message = {"role": "user", "content": user_input}
         messages.append(user_message)
 
-        # Create and append AI response
-        ai_response = "This is a mock response from the AI."
+        # Create and append AI response via OpenAI with streaming
+        print("AI: ", end="", flush=True)
+        ai_response = asyncio.run(
+            stream_ai_response(messages)
+        )
+        print()  # newline after streamed content
         ai_message = {"role": "assistant", "content": ai_response}
         messages.append(ai_message)
 
@@ -106,7 +247,6 @@ def run_chat(db_manager: FlatFileManager, user_id: str, thread_name: str) -> Non
         end_time = time.perf_counter()
         duration = end_time - start_time
 
-        print(f"AI: {ai_response}")
         print(f"(Operation took {duration:.4f} seconds)")
 
 
