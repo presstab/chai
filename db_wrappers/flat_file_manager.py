@@ -8,6 +8,7 @@ class FlatFileManager:
     """
     Manages storing and retrieving chat conversations in flat JSON files.
     """
+
     def __init__(self, storage_dir="data"):
         """
         Initializes the FlatFileManager for a specific user.
