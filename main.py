@@ -238,6 +238,9 @@ def main():
     db_manager = MongoDBManager(connection_string=connection_string, database_name=database_name)
 
     user_id = input("Please enter your user ID to begin: ")
+    if not user_id:
+        print("User ID cannot be empty.")
+        return
 
     # --- TODO 2: List existing threads and let user choose ---
     # Steps:
@@ -250,51 +253,46 @@ def main():
     #    - Prompt for a new thread name (already done for you, skip to next)
     #    - Store the new thread_name
 
-    threads = None  # fixme!
-
-    for i, thread_name in enumerate(threads):
-        print(f"{i}. {thread_name}")
-    print(f"{len(threads)}. Create new thread")
-    user_selection = input("Enter a thread number:")
-
-    if not user_selection.isdigit():
-        print("Not a number, exiting")
-        return
-
-    choice = int(user_selection)
-
-    if choice > len(threads):
-        print("Selection is too large of a number")
-        return
-
-    thread_name = ""
-    if not threads or choice == len(threads):
+    threads = db_manager.list_user_threads(user_id)
+    if not threads:
+        print("No existing threads found.")
         # prompt for thread name
-        thread_name = input("Enter thread name:")
+        thread_name = input("Enter a name for your new conversation thread: ").strip()
         # Store new thread name
-        # fixme!
-        # db_manager.save_conversation
+        if not thread_name: 
+            thread_name = "untitled"
+        db_manager.save_conversation(user_id, thread_name, [])
     else:
-        thread_name = threads[choice]
-
+        print("Existing threads:")
+        for idx, name in enumerate(threads, start=1):
+            print(f"{idx}. {name}")
+        print("N. Create new thread")
+        
+        choice = input("Choose a thread (enter number or 'N'): ").strip().lower()
+        if choice == "n":
+            thread_name = input("Enter a new name for your conversation thread: ").strip()
+            if not thread_name:
+                thread_name = "untitled"
+            db_manager.save_conversation(user_id, thread_name, [])
+        elif choice.isdigit() and 1 <= int(choice) <= len(threads):
+            thread_name = threads[int(choice) - 1]
+        else:
+            print("Invalid choice.")
+            return
+        
     run_chat(db_manager, user_id, thread_name)
 
     # Don't forget to close the connection when done!
     db_manager.close()
 
-def run_chat(db_manager: MongoDBManager, thread_manager: ThreadedFlatFileManager, user_id: str, thread_name: str, conversation_id: str) -> None:
+def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None:
     """
     Runs the chat loop for a specific conversation thread.
     """
     # --- TODO 3: Load and display existing conversation ---
     # Time how long it takes to load the conversation
     start_time = time.perf_counter()
-    messages = thread_manager.load_thread(user_id, thread_name)
-    if not messages:
-        try:
-            messages = db_manager.get_conversation(conversation_id)
-        except Exception:
-            messages = []
+    messages = db_manager.get_conversation(user_id, thread_name)
     end_time = time.perf_counter()
     duration = end_time - start_time
 
@@ -304,6 +302,8 @@ def run_chat(db_manager: MongoDBManager, thread_manager: ThreadedFlatFileManager
             role = message['role'].capitalize()
             print(f"{role}: {message['content']}")
         print(f"Load time: {duration:.4f} seconds\n")
+    else:
+        print("Starting a new conversation. \n")    
 
     print(f"Conversation: '{thread_name}'. Type 'exit' to quit.")
 
@@ -333,27 +333,15 @@ def run_chat(db_manager: MongoDBManager, thread_manager: ThreadedFlatFileManager
         # Append user message
         user_message = {"role": "user", "content": user_input, "timestamp": timestamp}
         # fixme! Use append_message
-        messages.append(user_message)
+        db_manager.append_message(user_id, thread_name, user_message)
         print(f"You: ({timestamp}): {user_input}")
-        # db_manager.
-        try:
-            db_manager.save_conversation(conversation_id, f"{conversation_id}.json", messages)
-        except Exception:
-            pass
-        thread_manager.save_thread(user_id, thread_name, messages)
         
         # Create and append AI response
         ai_response = generated_ai_response(user_input)
         ai_message = {"role": "assistant", "content": ai_response, "timestamp": timestamp}
         # fixme! Use append_message
-        messages.append(ai_message)
+        db_manager.append_message(user_id, thread_name, ai_message)
         print(f"AI: {ai_response}")
-        #db_manager.
-        try:
-            db_manager.save_conversation(conversation_id, f"{conversation_id}.json", messages)
-        except Exception:
-            pass
-        thread_manager.save_thread(user_id, thread_name, messages)
 
         end_time = time.perf_counter()
         duration = end_time - start_time
