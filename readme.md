@@ -45,6 +45,7 @@ Run performance_test.py and record the results. What did you observe about:
     - 100 pairs → Flat: 0.0051s, MongoDB: 0.0390s
 - Bulk write (1000 pairs): Flat: 0.0311s, MongoDB: 0.2009s
 - Cold start: Flat: 0.0073s, MongoDB: 0.9290s
+
 - How append times changed as the number of messages grew for flat files vs MongoDB?
     - Flat files: basically flat ~0.0072s per append from 10 → 100 pairs.
     - MongoDB: higher but steady ~0.10s → 0.09s per append as pairs grow.
