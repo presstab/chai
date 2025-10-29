@@ -59,11 +59,11 @@ This lab focuses on building the foundational persistence layer using a simple f
 2. Atomic Operations
 - In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. Why is this important for a chat application where multiple messages might be added rapidly?
     - An atomic operation is one that is indivisible — it either completes fully or not at all. There’s no halfway point where part of the data is updated and part is not. If an error or crash occurs mid-operation, the database automatically rolls back to its previous consistent state.
-        Why this matters for a chat app using $push:
-        - In the append_message() method, MongoDB’s $push operator adds a new message to the messages array atomically. That means:
-            - If multiple users or processes try to insert messages at the same time, MongoDB guarantees each message is safely added without overwriting or losing others.
-            - You’ll never end up with a “half-written” message or a corrupted conversation.
-            - Even under rapid message bursts (like in an active group chat), every insert is isolated and consistent.
+        - Why this matters for a chat app using $push:
+            - In the append_message() method, MongoDB’s $push operator adds a new message to the messages array atomically. That means:
+                - If multiple users or processes try to insert messages at the same time, MongoDB guarantees each message is safely added without overwriting or losing others.
+                - You’ll never end up with a “half-written” message or a corrupted conversation.
+                - Even under rapid message bursts (like in an active group chat), every insert is isolated and consistent.
 3. Scalability
 - Imagine your chat application goes viral and now has 1 million users, each with an average of 10 conversation threads containing 500 messages each.
 - Compare how FlatFileManager and MongoDBManager would handle:
