@@ -57,24 +57,29 @@ This lab focuses on building the foundational persistence layer using a simple f
     - MongoDB = connection + BSON serialization + network round-trip + index updates → higher constant overhead per op, but better consistency, atomic $push, and stable scaling as data/users grow.
     - Net: for your lab-scale runs, files dominate; for real apps with bigger datasets/concurrency/search, MongoDB pays off.
 2. Atomic Operations
-In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. Why is this important for a chat application where multiple messages might be added rapidly?
-    - 
+- In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. Why is this important for a chat application where multiple messages might be added rapidly?
+    - An atomic operation is one that is indivisible — it either completes fully or not at all. There’s no halfway point where part of the data is updated and part is not. If an error or crash occurs mid-operation, the database automatically rolls back to its previous consistent state.
+        Why this matters for a chat app using $push:
+        - In the append_message() method, MongoDB’s $push operator adds a new message to the messages array atomically. That means:
+            - If multiple users or processes try to insert messages at the same time, MongoDB guarantees each message is safely added without overwriting or losing others.
+            - You’ll never end up with a “half-written” message or a corrupted conversation.
+            - Even under rapid message bursts (like in an active group chat), every insert is isolated and consistent.
 3. Scalability
-Imagine your chat application goes viral and now has 1 million users, each with an average of 10 conversation threads containing 500 messages each.
-Compare how FlatFileManager and MongoDBManager would handle:
-    Finding all threads for a specific user
+- Imagine your chat application goes viral and now has 1 million users, each with an average of 10 conversation threads containing 500 messages each.
+- Compare how FlatFileManager and MongoDBManager would handle:
+    - Finding all threads for a specific user
         - 
-    Loading a specific conversation
+    - Loading a specific conversation
         - 
-    Storage organization and file system limits
+    - Storage organization and file system limits
         - 
 4. Data Modeling Design Challenge
-Currently, each conversation is stored as a single document with an embedded array of messages:
+- Currently, each conversation is stored as a single document with an embedded array of messages:
 {
   "_id": "user_123_work",
   "messages": [...]
 }
-An alternative design would be to store each message as its own document:
+- An alternative design would be to store each message as its own document:
 {
   "_id": "msg_001",
   "conversation_id": "user_123_work",
@@ -82,10 +87,10 @@ An alternative design would be to store each message as its own document:
   "content": "Hello!",
   "timestamp": "..."
 }
-Describe:
-    One advantage of the embedded messages design (what we currently use)
+- Describe:
+    - One advantage of the embedded messages design (what we currently use)
         - 
-    One advantage of the separate message documents design
+    - One advantage of the separate message documents design
         - 
-    A scenario where you would choose the separate messages design instead
+    - A scenario where you would choose the separate messages design instead
         - 
