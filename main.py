@@ -309,6 +309,22 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
 
     while True:
         user_input = input("> ")
+        
+        if user_input.startswith("/search"):
+            keyword = user_input.replace("/search", "").strip()
+            if not keyword:
+                print("Usage: /search <keyword>")
+                continue
+            print(f"\nSearching for messages containing '{keyword}'...\n")
+            results = db_manager.search_messages(user_id, keyword)
+            if not results:
+                print("No matches found.\n")
+            else:
+                for r in results:
+                    print(f"[{r['thread_name']}] {r['role'].capitalize()}: {r['content']} ({r.get('timestamp', '')})")
+                print(f"\nFound {len(results)} matching message(s).\n")
+            continue
+        
         if user_input.lower() == 'exit':
             print("Goodbye!")
             break

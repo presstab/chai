@@ -201,6 +201,35 @@ class MongoDBManager:
         """
         self.conversations.delete_many({})
 
+    def search_messages(self, user_id: str, query: str) -> list[dict]:
+        """
+        Searches for messages across all threads for a specific user using a regex query.
+
+        Args:
+            user_id (str): The user's ID to restrict search scope
+            query (str): The search keyword or phrase
+
+        Returns:
+            List[Dict]: A list of matching messages with their conversation context
+        """
+        # Perform case-insensitive regex search in the embedded messages array
+        matches = self.conversations.aggregate([
+            {"$match": {"user_id": user_id}},  # limit to this user's threads
+            {"$unwind": "$messages"},          # flatten messages array
+            {"$match": {"messages.content": {"$regex": query, "$options": "i"}}},  # case-insensitive
+            {
+                "$project": {
+                    "_id": 0,
+                    "thread_name": 1,
+                    "role": "$messages.role",
+                    "content": "$messages.content",
+                    "timestamp": "$messages.timestamp"
+                }
+            }
+        ])
+
+        return list(matches)
+
 
 # Test code
 if __name__ == "__main__":
