@@ -76,18 +76,18 @@ In MongoDBManager, we use the $push operator in append_message(). Research what 
         - 
 4. Data Modeling Design Challenge
 - Currently, each conversation is stored as a single document with an embedded array of messages:
-{
-  "_id": "user_123_work",
-  "messages": [...]
-}
+- {
+    "_id": "user_123_work",
+    "messages": [...]
+  }
 - An alternative design would be to store each message as its own document:
-{
-  "_id": "msg_001",
-  "conversation_id": "user_123_work",
-  "role": "user",
-  "content": "Hello!",
-  "timestamp": "..."
-}
+- {
+    "_id": "msg_001",
+    "conversation_id": "user_123_work",
+    "role": "user",
+    "content": "Hello!",
+    "timestamp": "..."
+  }
 - Describe:
     - One advantage of the embedded messages design (what we currently use)
         - 
