@@ -58,8 +58,11 @@ Run performance_test.py and record the results. What did you observe about:
     - MongoDB = connection + BSON serialization + network round-trip + index updates → higher constant overhead per op, but better consistency, atomic $push, and stable scaling as data/users grow.
     - Net: for your lab-scale runs, files dominate; for real apps with bigger datasets/concurrency/search, MongoDB pays off.
 2. Atomic Operations
-In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. Why is this important for a chat application where multiple messages might be added rapidly?
-- An atomic operation is one that is indivisible — it either completes fully or not at all. There’s no halfway point where part of the data is updated and part is not. If an error or crash occurs mid-operation, the database automatically rolls back to its previous consistent state.
+In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. 
+Why is this important for a chat application where multiple messages might be added rapidly?
+- An atomic operation is one that is indivisible — it either completes fully or not at all. 
+    There’s no halfway point where part of the data is updated and part is not. 
+    If an error or crash occurs mid-operation, the database automatically rolls back to its previous consistent state.
     - Why this matters for a chat app using $push:
         - In the append_message() method, MongoDB’s $push operator adds a new message to the messages array atomically. That means:
             - If multiple users or processes try to insert messages at the same time, MongoDB guarantees each message is safely added without overwriting or losing others.
@@ -69,11 +72,25 @@ In MongoDBManager, we use the $push operator in append_message(). Research what 
 - Imagine your chat application goes viral and now has 1 million users, each with an average of 10 conversation threads containing 500 messages each.
 - Compare how FlatFileManager and MongoDBManager would handle:
     - Finding all threads for a specific user
-        - 
+        - FlatFileManager: It would need to scan through thousands of individual JSON files or directories to find which ones belong to a specific user. 
+        There’s no built-in indexing, so every lookup means reading filenames or file contents — extremely slow and inefficient at this scale.
+        - MongoDBManager: MongoDB can instantly query indexed fields like user_id and thread_name. 
+        With millions of documents, an index lookup is still near constant time. 
+        It can easily handle returning all threads for a given user without scanning the entire database.
     - Loading a specific conversation
-        - 
+        - FlatFileManager: The app must open and parse one entire JSON file (potentially several MBs if it holds hundreds of messages). 
+        Each read operation becomes slower as the file size grows. 
+        If multiple users access different files simultaneously, the file system’s read/write contention gets worse.
+        - MongoDBManager: MongoDB can load only the needed document using its _id or indexed fields, retrieving all messages instantly from memory or disk cache. 
+        Even with many concurrent users, MongoDB’s internal caching and concurrency control make it much faster and more scalable.
     - Storage organization and file system limits
-        - 
+        - FlatFileManager: 1 million users × 10 threads = 10 million JSON files. 
+        Most operating systems start to choke around tens or hundreds of thousands of files per directory. 
+        Managing backups, updates, or even directory listings would be painfully slow. 
+        Disk fragmentation and file corruption risks also rise sharply.
+        - MongoDBManager: Stores all data in collections inside a single database. 
+        MongoDB handles millions of documents efficiently using internal data structures and automatic indexing. 
+        It avoids OS-level file limits by managing storage internally and supports horizontal scaling via sharding when data exceeds a single server’s capacity.
 4. Data Modeling Design Challenge
 - Currently, each conversation is stored as a single document with an embedded array of messages:
     - {
