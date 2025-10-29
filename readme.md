@@ -107,8 +107,11 @@ Why is this important for a chat application where multiple messages might be ad
     }
 - Describe:
     - One advantage of the embedded messages design (what we currently use)
-        - 
+        - All messages for a conversation are stored together in a single document, making it fast and efficient to load the entire chat history in one query. 
+        This is ideal for small to medium conversations where users frequently view the full thread at once (like opening a chat window).
     - One advantage of the separate message documents design
-        - 
+        - Each message can be queried, updated, or streamed independently, allowing for better scalability and parallel writes. 
+        It’s more efficient when conversations grow very large (thousands of messages) because you can load messages in chunks or pages instead of reading one massive document.
     - A scenario where you would choose the separate messages design instead
-        - 
+        - In a large-scale or real-time chat platform (like Discord or Slack) where conversations can reach thousands of messages and multiple users are sending messages simultaneously. 
+        This design supports pagination, infinite scrolling, real-time inserts, and sharding across servers — making it far more scalable for heavy concurrent usage.
