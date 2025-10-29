@@ -35,13 +35,27 @@ This lab focuses on building the foundational persistence layer using a simple f
 ## Questions
 1. Performance Analysis
 Run performance_test.py and record the results. What did you observe about:
-    - 
-    How append times changed as the number of messages grew for flat files vs MongoDB?
-        - 
-    The difference in read times for retrieving the full conversation?
-        - 
+    - Incremental appends (avg per append):
+        - 10 pairs → Flat: 0.0072s, MongoDB: 0.1011s
+        - 50 pairs → Flat: 0.0072s, MongoDB: 0.0856s
+        - 100 pairs → Flat: 0.0072s, MongoDB: 0.0877s
+    - Full reads:
+        - 10 pairs → Flat: 0.0051s, MongoDB: 0.0352s
+        - 50 pairs → Flat: 0.0052s, MongoDB: 0.0392s
+        - 100 pairs → Flat: 0.0051s, MongoDB: 0.0390s
+    - Bulk write (1000 pairs): Flat: 0.0311s, MongoDB: 0.2009s
+    - Cold start: Flat: 0.0073s, MongoDB: 0.9290s
+    ~ How append times changed as the number of messages grew for flat files vs MongoDB?
+        - Flat files: basically flat ~0.0072s per append from 10 → 100 pairs.
+        - MongoDB: higher but steady ~0.10s → 0.09s per append as pairs grow.
+    ~ The difference in read times for retrieving the full conversation?
+        - Flat files: ~0.005s to read the whole convo at 100 pairs.
+        - MongoDB: ~0.039s for the same — ~7–8× slower.
+        - Both are still “fast,” but files win for small re
 Explain why you see these performance characteristics.
-    - 
+    - Flat files = pure local disk I/O + JSON parse. No network, no index maintenance → super quick for small data and cold starts.
+    - MongoDB = connection + BSON serialization + network round-trip + index updates → higher constant overhead per op, but better consistency, atomic $push, and stable scaling as data/users grow.
+    - Net: for your lab-scale runs, files dominate; for real apps with bigger datasets/concurrency/search, MongoDB pays off.
 2. Atomic Operations
 In MongoDBManager, we use the $push operator in append_message(). Research what "atomic operations" means in the context of databases. Why is this important for a chat application where multiple messages might be added rapidly?
     - 
