@@ -51,7 +51,7 @@ Run performance_test.py and record the results. What did you observe about:
     - The difference in read times for retrieving the full conversation?
         - Flat files: ~0.005s to read the whole convo at 100 pairs.
         - MongoDB: ~0.039s for the same — ~7–8× slower.
-        - Both are still “fast,” but files win for small re
+        - Both are still “fast,” but files win for small reads
 Explain why you see these performance characteristics.
     - Flat files = pure local disk I/O + JSON parse. No network, no index maintenance → super quick for small data and cold starts.
     - MongoDB = connection + BSON serialization + network round-trip + index updates → higher constant overhead per op, but better consistency, atomic $push, and stable scaling as data/users grow.
