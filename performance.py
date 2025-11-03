@@ -4,8 +4,8 @@ import string
 from db_wrappers.flat_file_manager import FlatFileManager
 from db_wrappers.mongodb_manager import MongoDBManager
 
-PASSWORD = ""
-CONNECTION_STRING = f""
+PASSWORD = "lab2mongodb"
+CONNECTION_STRING = f"mongodb+srv://ahezekiah_db_mongo:lab2mongodb@cluster0.ew8zh8g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 def random_string(length=20):
     """Generate a random string for test data."""
