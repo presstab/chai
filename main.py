@@ -4,6 +4,7 @@ from db_wrappers.mongodb_manager import MongoDBManager
 
 
 def main():
+    
     """
     Main function to run the Chai AI chat application with MongoDB.
     """
@@ -98,7 +99,7 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
 
     while True:
         user_input = input("> ")
-        if user_input.lower() == 'exit':
+        if user_input.lower() == "exit":
             print("Goodbye!")
             break
 
@@ -129,9 +130,10 @@ def run_chat(db_manager: MongoDBManager, user_id: str, thread_name: str) -> None
         end_time = None  # fixme!
         duration = None  # fixme!
 
+        end_time = time.perf_counter()
         print(f"AI: {ai_response}")
-        print(f"(Operation took {duration:.4f} seconds)")
-
+        print(f"(Operation took {end_time - start_time:.4f} seconds)\n")
 
 if __name__ == "__main__":
     main()
+
